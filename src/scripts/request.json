@@ -1,0 +1,11 @@
+{
+  "node_type": {
+    "node_type_id": "atomic.echo",
+    "version": "0.1.0",
+    "kind": "atomic",
+    "description": "Echo inputs back to the caller.",
+    "input_schema": { "type": "object", "additionalProperties": true },
+    "output_schema": { "type": "object", "additionalProperties": true }
+  }
+}
+
