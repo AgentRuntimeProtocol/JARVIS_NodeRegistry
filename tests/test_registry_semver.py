@@ -8,14 +8,14 @@ from arp_standard_model import (
     NodeType,
     NodeTypePublishRequest,
 )
-from arp_template_node_registry.registry import NodeRegistry
+from jarvis_node_registry.registry import NodeRegistry
 
 
 def test_semver_latest_version() -> None:
-    registry = NodeRegistry()
+    registry = NodeRegistry(db_url="sqlite:///:memory:")
     for version in ["0.2.0", "0.10.0"]:
         node_type = NodeType(
-            node_type_id="atomic.echo",
+            node_type_id="jarvis.core.echo",
             version=version,
             kind=NodeKind.atomic,
         )
@@ -25,7 +25,7 @@ def test_semver_latest_version() -> None:
         asyncio.run(registry.publish_node_type(request))
 
     get_request = NodeRegistryGetNodeTypeRequest(
-        params=NodeRegistryGetNodeTypeParams(node_type_id="atomic.echo", version=None)
+        params=NodeRegistryGetNodeTypeParams(node_type_id="jarvis.core.echo", version=None)
     )
     node_type = asyncio.run(registry.get_node_type(get_request))
 

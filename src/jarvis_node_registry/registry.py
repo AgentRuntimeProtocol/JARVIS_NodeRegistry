@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from collections import defaultdict
 import re
+import os
+from collections.abc import Iterable
 from typing import Any
 
 from arp_standard_model import (
@@ -20,18 +21,20 @@ from arp_standard_server import ArpServerError
 from arp_standard_server.node_registry import BaseNodeRegistryServer
 
 from . import __version__
+from .store import NodeTypeStore
 from .utils import now
 
 
 class NodeRegistry(BaseNodeRegistryServer):
-    """Minimal in-memory Node Registry implementation."""
+    """SQLite-backed Node Registry implementation."""
 
     # Core method - API surface and main extension points
     def __init__(
         self,
         *,
-        service_name: str = "arp-template-node-registry",
+        service_name: str = "jarvis-node-registry",
         service_version: str = __version__,
+        db_url: str | None = None,
     ) -> None:
         """
         Not part of ARP spec; required to construct the registry.
@@ -46,8 +49,9 @@ class NodeRegistry(BaseNodeRegistryServer):
         """
         self._service_name = service_name
         self._service_version = service_version
-        self._store: dict[tuple[str, str], NodeType] = {}
-        self._versions: dict[str, list[str]] = defaultdict(list)
+        if db_url is None:
+            db_url = os.environ.get("JARVIS_NODE_REGISTRY_DB_URL") or "sqlite:///./runs/jarvis_node_registry.sqlite"
+        self._store = NodeTypeStore(db_url=db_url)
 
     # Core methods - Node Registry API implementations
     async def health(self, request: NodeRegistryHealthRequest) -> Health:
@@ -86,16 +90,16 @@ class NodeRegistry(BaseNodeRegistryServer):
           - Validate schemas or metadata before publishing.
         """
         node_type = request.body.node_type
-        key = (node_type.node_type_id, node_type.version)
-        if key in self._store:
-            raise ArpServerError(
-                code="node_type_already_exists",
-                message=f"NodeType '{node_type.node_type_id}@{node_type.version}' already exists",
-                status_code=409,
-            )
-        self._store[key] = node_type
-        self._versions[node_type.node_type_id].append(node_type.version)
-        return node_type
+        try:
+            return self._store.publish(node_type)
+        except Exception as exc:
+            if "UNIQUE constraint failed" in str(exc):
+                raise ArpServerError(
+                    code="node_type_already_exists",
+                    message=f"NodeType '{node_type.node_type_id}@{node_type.version}' already exists",
+                    status_code=409,
+                ) from exc
+            raise
 
     async def get_node_type(self, request: NodeRegistryGetNodeTypeRequest) -> NodeType:
         """
@@ -109,9 +113,8 @@ class NodeRegistry(BaseNodeRegistryServer):
           - Add access controls per node_type_id.
         """
         node_type_id = request.params.node_type_id
-        version = request.params.version
-        if version is None:
-            versions = self._versions.get(node_type_id) or []
+        if (version := request.params.version) is None:
+            versions = list(self._store.list_versions(node_type_id))
             if not versions:
                 raise ArpServerError(code="node_type_not_found", message=f"NodeType '{node_type_id}' not found", status_code=404)
             semver_versions = [(v, _semver_key(v)) for v in versions]
@@ -120,9 +123,7 @@ class NodeRegistry(BaseNodeRegistryServer):
                 version = max(semver_versions, key=lambda item: item[1])[0]
             else:
                 version = sorted(versions)[-1]
-        key = (node_type_id, version)
-        node_type = self._store.get(key)
-        if node_type is None:
+        if (node_type := self._store.get(node_type_id, version)) is None:
             raise ArpServerError(code="node_type_not_found", message=f"NodeType '{node_type_id}@{version}' not found", status_code=404)
         return node_type
 
@@ -139,15 +140,25 @@ class NodeRegistry(BaseNodeRegistryServer):
         """
         q = (request.params.q or "").strip().lower()
         kind: NodeKind | None = request.params.kind
-        out: list[NodeType] = []
-        for node_type in self._store.values():
-            if q and q not in node_type.node_type_id.lower():
-                continue
-            if kind is not None and node_type.kind != kind:
-                continue
-            out.append(node_type)
-        out.sort(key=lambda nt: (nt.node_type_id, nt.version))
-        return out
+        return self._store.list(q=q, kind=kind)
+
+    def seed_node_types(self, node_types: Iterable[NodeType]) -> int:
+        """
+        JARVIS helper: seed NodeTypes on startup without failing on duplicates.
+
+        Returns the count of newly inserted NodeTypes.
+        """
+        inserted = 0
+        for node_type in node_types:
+            try:
+                self._store.publish(node_type)
+            except Exception as exc:
+                if "UNIQUE constraint failed" in str(exc):
+                    continue
+                raise
+            else:
+                inserted += 1
+        return inserted
 
 
 _SEMVER_RE = re.compile(
@@ -162,8 +173,7 @@ def _semver_key(version: str) -> tuple[int, int, int, int, tuple[tuple[int, Any]
     if not match:
         return None
     major, minor, patch = (int(match.group(i)) for i in range(1, 4))
-    prerelease = match.group(4)
-    if prerelease is None:
+    if (prerelease := match.group(4)) is None:
         return (major, minor, patch, 1, ())
     parts: list[tuple[int, Any]] = []
     for part in prerelease.split("."):

@@ -1,8 +1,8 @@
-# ARP Template Node Registry
+# JARVIS Node Registry
 
-Use this repo as a starting point for building an **ARP compliant Node Registry** service.
+First-party OSS reference implementation of the **ARP Node Registry** service.
 
-This minimal template implements the Node Registry API using only the SDK packages:
+This reference implementation uses only the SDK packages:
 `arp-standard-server`, `arp-standard-model`, and `arp-standard-client`.
 
 It is intentionally small and readable so you can swap in your preferred storage/index while keeping the same API surface.
@@ -21,7 +21,7 @@ python3 -m pip install -e .
 
 ## Local configuration (optional)
 
-For local dev convenience, copy the template env file:
+For local dev convenience, copy the example env file:
 
 ```bash
 cp .env.example .env.local
@@ -34,8 +34,8 @@ cp .env.example .env.local
 - Node Registry listens on `http://127.0.0.1:8084` by default.
 
 ```bash
-python3 -m pip install -e '.[run]'
-python3 -m arp_template_node_registry
+python3 -m pip install -e .
+python3 -m jarvis_node_registry
 ```
 
 > [!TIP]
@@ -43,20 +43,22 @@ python3 -m arp_template_node_registry
 
 ## Using this repo
 
-To build your own registry, fork this repository and replace the in-memory store with your storage/index while preserving request/response semantics.
+To build your own registry, fork this repository and replace the SQLite store with your storage/index while preserving request/response semantics.
 
 If all you need is to change storage behavior, edit:
-- `src/arp_template_node_registry/registry.py`
+- `src/jarvis_node_registry/registry.py`
 
 ### Default behavior
 
-- NodeTypes are stored in memory keyed by `(node_type_id, version)`.
+- NodeTypes are stored in SQLite keyed by `(node_type_id, version)`.
 - `publish_node_type` stores and returns the NodeType (conflict returns 409).
-- `get_node_type` returns exact version if provided; otherwise returns the latest version by string sort.
+- `get_node_type` returns exact version if provided; otherwise returns the latest semver when parseable.
 - `list_node_types` supports a minimal `q` and `kind` filter.
+- On startup, the registry auto-loads installed **node packs** via the `jarvis.nodepacks` entry point group
+  (from `arp-jarvis-atomic-nodes[metadata]`) and seeds their NodeTypes; duplicates are ignored.
 
 > [!NOTE]
-> The “latest version” selection is a simple string sort for template simplicity; real registries should use semver-aware ordering.
+> The “latest version” selection prefers semver ordering and falls back to string sort when needed.
 
 ## Quick health check
 
@@ -90,11 +92,12 @@ arp-conformance check node-registry --url http://127.0.0.1:8084 --tier surface
 
 ## Authentication
 
-For out-of-the-box usability, this template defaults to auth-disabled unless you set `ARP_AUTH_MODE` or `ARP_AUTH_PROFILE`.
+Auth is enabled by default (JWT). To disable for local dev, set `ARP_AUTH_PROFILE=dev-insecure`.
 
-To enable JWT auth, set either:
-- `ARP_AUTH_PROFILE=dev-secure-keycloak` + `ARP_AUTH_SERVICE_ID=<audience>`
-- or `ARP_AUTH_MODE=required` with `ARP_AUTH_ISSUER` and `ARP_AUTH_AUDIENCE`
+To enable local Keycloak defaults, set:
+- `ARP_AUTH_PROFILE=dev-secure-keycloak`
+- `ARP_AUTH_AUDIENCE=arp-node-registry`
+- `ARP_AUTH_ISSUER=http://localhost:8080/realms/arp-dev`
 
 ## Upgrading
 
