@@ -56,6 +56,8 @@ If all you need is to change storage behavior, edit:
 - `list_node_types` supports a minimal `q` and `kind` filter.
 - On startup, the registry auto-loads installed **node packs** via the `jarvis.nodepacks` entry point group
   (from `arp-jarvis-atomic-nodes[metadata]`) and seeds their NodeTypes; duplicates are ignored.
+- On startup, the registry also seeds a small set of **built-in system NodeTypes** (metadata-only),
+  including composite planner variants such as `jarvis.composite.planner.general`.
 
 > [!NOTE]
 > The “latest version” selection prefers semver ordering and falls back to string sort when needed.
