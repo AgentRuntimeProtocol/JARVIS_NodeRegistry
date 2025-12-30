@@ -11,7 +11,7 @@ Implements: ARP Standard `spec/v1` Node Registry API (contract: `ARP_Standard/sp
 
 ## Requirements
 
-- Python >= 3.10
+- Python >= 3.11
 
 ## Install
 
@@ -58,9 +58,26 @@ If all you need is to change storage behavior, edit:
   (from `arp-jarvis-atomic-nodes[metadata]`) and seeds their NodeTypes; duplicates are ignored.
 - On startup, the registry also seeds a small set of **built-in system NodeTypes** (metadata-only),
   including composite planner variants such as `jarvis.composite.planner.general`.
+- Set `JARVIS_NODE_REGISTRY_SEED=false` to disable startup seeding (recommended for multi-replica deployments).
+- SQLite is read-mostly in steady state; production should prefer a single replica when using file-backed SQLite.
 
 > [!NOTE]
 > The “latest version” selection prefers semver ordering and falls back to string sort when needed.
+
+### Extensions
+
+NodeTypes include an `extensions` field for non-normative metadata. In the JARVIS stack:
+
+- First-party atomic node packs (e.g. `arp-jarvis-atomic-nodes`) populate `NodeType.extensions.jarvis.*` metadata such as:
+  - `jarvis.pack_id`, `jarvis.pack_version`, `jarvis.node_name`
+  - `jarvis.side_effect`, `jarvis.egress_policy`, `jarvis.tags`, `jarvis.trust_tier`
+- Node Registry built-ins (seeded on startup) add planner metadata such as:
+  - `jarvis.role=planner`
+  - `jarvis.planner_variant=general`
+
+This registry stores and returns these extension fields verbatim; Selection Service may use a subset to improve candidate ranking.
+
+Full cross-stack list: `Business_Docs/JARVIS/Extensions.md`.
 
 ## Quick health check
 

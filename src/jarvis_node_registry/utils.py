@@ -16,6 +16,13 @@ def _has_auth_env() -> bool:
     return any(key.startswith("ARP_AUTH_") for key in os.environ)
 
 
+def env_flag(name: str, *, default: bool) -> bool:
+    raw = (os.environ.get(name) or "").strip().lower()
+    if not raw:
+        return default
+    return raw not in {"0", "false", "no", "off"}
+
+
 def auth_settings_from_env_or_dev_insecure() -> AuthSettings:
     if _has_auth_env():
         return AuthSettings.from_env()

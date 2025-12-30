@@ -11,8 +11,9 @@ from arp_standard_model import (
 from jarvis_node_registry.registry import NodeRegistry
 
 
-def test_semver_latest_version() -> None:
-    registry = NodeRegistry(db_url="sqlite:///:memory:")
+def test_semver_latest_version(tmp_path) -> None:
+    db_url = f"sqlite:///{tmp_path}/node_registry.sqlite"
+    registry = NodeRegistry(db_url=db_url)
     for version in ["0.2.0", "0.10.0"]:
         node_type = NodeType(
             node_type_id="jarvis.core.echo",

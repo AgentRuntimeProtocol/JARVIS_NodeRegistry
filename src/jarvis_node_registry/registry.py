@@ -32,7 +32,7 @@ class NodeRegistry(BaseNodeRegistryServer):
     def __init__(
         self,
         *,
-        service_name: str = "jarvis-node-registry",
+        service_name: str = "arp-jarvis-node-registry",
         service_version: str = __version__,
         db_url: str | None = None,
     ) -> None:
