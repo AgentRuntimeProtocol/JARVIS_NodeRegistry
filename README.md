@@ -77,7 +77,7 @@ NodeTypes include an `extensions` field for non-normative metadata. In the JARVI
 
 This registry stores and returns these extension fields verbatim; Selection Service may use a subset to improve candidate ranking.
 
-Full cross-stack list: `Business_Docs/JARVIS/Extensions.md`.
+Full cross-stack list: `https://github.com/AgentRuntimeProtocol/BusinessDocs/blob/main/Business_Docs/JARVIS/Extensions.md`.
 
 ## Quick health check
 
