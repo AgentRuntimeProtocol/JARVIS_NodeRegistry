@@ -17,16 +17,16 @@ def test_store_publish_get_list_versions(tmp_path) -> None:
     store = NodeTypeStore(db_url=db_url)
     node = NodeType(
         node_type_id="jarvis.core.echo",
-        version="0.3.2",
+        version="0.3.3",
         kind=NodeKind.atomic,
     )
     store.publish(node)
 
-    fetched = store.get("jarvis.core.echo", "0.3.2")
+    fetched = store.get("jarvis.core.echo", "0.3.3")
     assert fetched is not None
     assert fetched.node_type_id == "jarvis.core.echo"
 
-    assert list(store.list_versions("jarvis.core.echo")) == ["0.3.2"]
+    assert list(store.list_versions("jarvis.core.echo")) == ["0.3.3"]
     assert store.list(q="jarvis.core", kind=NodeKind.atomic)
     assert store.list(q="missing", kind=NodeKind.atomic) == []
 
@@ -88,14 +88,14 @@ def test_create_app_seeds_when_enabled(tmp_path, monkeypatch: pytest.MonkeyPatch
     node_types = [
         NodeType(
             node_type_id="jarvis.core.echo",
-            version="0.3.2",
+            version="0.3.3",
             kind=NodeKind.atomic,
         )
     ]
     builtin_types = [
         NodeType(
             node_type_id="jarvis.composite.planner.general",
-            version="0.3.2",
+            version="0.3.3",
             kind=NodeKind.composite,
         )
     ]
@@ -127,11 +127,11 @@ def test_store_in_memory_database() -> None:
     store = NodeTypeStore(db_url="sqlite://:memory:")
     node = NodeType(
         node_type_id="jarvis.core.echo",
-        version="0.3.2",
+        version="0.3.3",
         kind=NodeKind.atomic,
     )
     store.publish(node)
-    assert store.get("jarvis.core.echo", "0.3.2") is not None
+    assert store.get("jarvis.core.echo", "0.3.3") is not None
     if store._keepalive is not None:
         store._keepalive.close()
 
