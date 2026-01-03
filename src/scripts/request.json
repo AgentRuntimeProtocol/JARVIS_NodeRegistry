@@ -1,7 +1,7 @@
 {
   "node_type": {
     "node_type_id": "jarvis.core.echo",
-    "version": "0.3.5",
+    "version": "0.3.7",
     "kind": "atomic",
     "description": "Echo inputs back to the caller.",
     "input_schema": { "type": "object", "additionalProperties": true },
