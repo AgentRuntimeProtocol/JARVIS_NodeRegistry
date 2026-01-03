@@ -37,9 +37,15 @@ def create_app():
     else:
         logger.info("Node Registry seeding is disabled (JARVIS_NODE_REGISTRY_SEED=false).")
 
+    auth_settings = auth_settings_from_env_or_dev_insecure()
+    logger.info(
+        "Node Registry auth settings (mode=%s, issuer=%s)",
+        auth_settings.mode,
+        auth_settings.issuer,
+    )
     app = registry.create_app(
         title="JARVIS Node Registry",
-        auth_settings=auth_settings_from_env_or_dev_insecure(),
+        auth_settings=auth_settings,
     )
     return app
 
