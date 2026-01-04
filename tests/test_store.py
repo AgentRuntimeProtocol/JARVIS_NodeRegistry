@@ -17,16 +17,16 @@ def test_store_publish_get_list_versions(tmp_path) -> None:
     store = NodeTypeStore(db_url=db_url)
     node = NodeType(
         node_type_id="jarvis.core.echo",
-        version="0.3.7",
+        version="0.3.8",
         kind=NodeKind.atomic,
     )
     store.publish(node)
 
-    fetched = store.get("jarvis.core.echo", "0.3.7")
+    fetched = store.get("jarvis.core.echo", "0.3.8")
     assert fetched is not None
     assert fetched.node_type_id == "jarvis.core.echo"
 
-    assert list(store.list_versions("jarvis.core.echo")) == ["0.3.7"]
+    assert list(store.list_versions("jarvis.core.echo")) == ["0.3.8"]
     assert store.list(q="jarvis.core", kind=NodeKind.atomic)
     assert store.list(q="missing", kind=NodeKind.atomic) == []
 
@@ -88,14 +88,14 @@ def test_create_app_seeds_when_enabled(tmp_path, monkeypatch: pytest.MonkeyPatch
     node_types = [
         NodeType(
             node_type_id="jarvis.core.echo",
-            version="0.3.7",
+            version="0.3.8",
             kind=NodeKind.atomic,
         )
     ]
     builtin_types = [
         NodeType(
             node_type_id="jarvis.composite.planner.general",
-            version="0.3.7",
+            version="0.3.8",
             kind=NodeKind.composite,
         )
     ]
@@ -127,11 +127,11 @@ def test_store_in_memory_database() -> None:
     store = NodeTypeStore(db_url="sqlite://:memory:")
     node = NodeType(
         node_type_id="jarvis.core.echo",
-        version="0.3.7",
+        version="0.3.8",
         kind=NodeKind.atomic,
     )
     store.publish(node)
-    assert store.get("jarvis.core.echo", "0.3.7") is not None
+    assert store.get("jarvis.core.echo", "0.3.8") is not None
     if store._keepalive is not None:
         store._keepalive.close()
 
@@ -141,7 +141,7 @@ def test_store_accepts_raw_path(tmp_path) -> None:
     store = NodeTypeStore(db_url=str(db_path))
     node = NodeType(
         node_type_id="jarvis.core.echo",
-        version="0.3.7",
+        version="0.3.8",
         kind=NodeKind.atomic,
     )
     store.publish(node)
