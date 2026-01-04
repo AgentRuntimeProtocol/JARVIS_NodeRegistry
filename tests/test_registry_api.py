@@ -167,7 +167,7 @@ def test_seed_node_types_raises_on_unexpected_error(tmp_path, monkeypatch) -> No
 
 
 def test_builtin_node_types() -> None:
-    node_types = builtin_node_types(version="0.3.7")
+    node_types = builtin_node_types(version="0.3.8")
     assert node_types
     node_type = node_types[0]
     assert node_type.node_type_id == "jarvis.composite.planner.general"
