@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "arp-jarvis-node-registry"
-version = "0.3.7"
+version = "0.3.8"
 description = "JARVIS Node Registry implementation for the ARP Standard (spec/v1)."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -15,7 +15,7 @@ dependencies = [
   "arp-standard-client==0.3.7",
   "arp-standard-server==0.3.7",
   "arp-standard-model==0.3.7",
-  "arp-jarvis-atomic-nodes[metadata]==0.3.7",
+  "arp-jarvis-atomic-nodes[metadata]==0.3.8",
   "uvicorn>=0.29.0",
 ]
 

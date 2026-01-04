@@ -18,10 +18,11 @@ def create_app():
     registry = NodeRegistry(db_url=registry_db_url)
 
     if env_flag("JARVIS_NODE_REGISTRY_SEED", default=True):
+        overwrite = env_flag("JARVIS_NODE_REGISTRY_SEED_OVERWRITE", default=False)
         # Seed NodeTypes from installed node packs (first-party atomic packs by default).
         try:
             node_types = load_node_types()
-            seeded = registry.seed_node_types(node_types)
+            seeded = registry.seed_node_types(node_types, overwrite=overwrite)
             if seeded:
                 logger.info("Seeded %s node types from installed node packs.", seeded)
         except Exception:
@@ -29,7 +30,7 @@ def create_app():
 
         # Seed built-in system NodeTypes (metadata only).
         try:
-            seeded = registry.seed_node_types(builtin_node_types(version=__version__))
+            seeded = registry.seed_node_types(builtin_node_types(version=__version__), overwrite=overwrite)
             if seeded:
                 logger.info("Seeded %s built-in node types.", seeded)
         except Exception:

@@ -172,7 +172,13 @@ def test_builtin_node_types() -> None:
     node_type = node_types[0]
     assert node_type.node_type_id == "jarvis.composite.planner.general"
     assert node_type.kind == NodeKind.composite
-    assert "anyOf" in (node_type.input_schema or {})
+    schema = node_type.input_schema or {}
+    assert schema.get("type") == "object"
+    assert schema.get("additionalProperties") is False
+    properties = schema.get("properties") or {}
+    required = schema.get("required") or []
+    assert isinstance(properties, dict)
+    assert set(required) == set(properties.keys())
 
 
 def test_semver_key_parsing() -> None:

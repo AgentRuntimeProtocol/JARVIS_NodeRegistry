@@ -15,25 +15,31 @@ def builtin_node_types(*, version: str) -> list[NodeType]:
 
     planner_input_schema: dict[str, Any] = {
         "type": "object",
-        "additionalProperties": True,
+        "additionalProperties": False,
         "properties": {
-            "goal": {"type": "string", "description": "High-level goal to plan/execute."},
-            "prompt": {"type": "string", "description": "Alias for goal (legacy/compat)."},
+            "goal": {"type": ["string", "null"], "description": "High-level goal to plan/execute."},
+            "prompt": {"type": ["string", "null"], "description": "Alias for goal (legacy/compat)."},
             "context": {
-                "type": "object",
-                "additionalProperties": True,
-                "description": "Optional context/facts for planning. Must not include secrets.",
+                "type": ["string", "null"],
+                "description": "Optional JSON-encoded context object for planning. Must not include secrets.",
             },
-            "max_steps": {"type": "integer", "minimum": 1, "description": "Hard cap on planned steps."},
-            "max_depth": {"type": "integer", "minimum": 1, "description": "Hard cap on planning recursion depth."},
+            "max_steps": {"type": ["integer", "null"], "minimum": 1, "description": "Hard cap on planned steps."},
+            "max_depth": {
+                "type": ["integer", "null"],
+                "minimum": 0,
+                "description": "Hard cap on planning recursion depth.",
+            },
+            "depth": {"type": ["integer", "null"], "minimum": 0, "description": "Current composite depth."},
         },
-        "anyOf": [{"required": ["goal"]}, {"required": ["prompt"]}],
+        "required": ["goal", "prompt", "context", "max_steps", "max_depth", "depth"],
     }
 
+    # Metadata-only placeholder: outputs are produced by the Composite Executor (CE).
     planner_output_schema: dict[str, Any] = {
         "type": "object",
-        "additionalProperties": True,
-        "description": "Planner outputs are implementation-defined in v0.x.",
+        "additionalProperties": False,
+        "properties": {},
+        "required": [],
     }
 
     return [

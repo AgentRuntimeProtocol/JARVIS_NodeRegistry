@@ -179,12 +179,21 @@ class NodeRegistry(BaseNodeRegistryServer):
         )
         return results
 
-    def seed_node_types(self, node_types: Iterable[NodeType]) -> int:
+    def seed_node_types(self, node_types: Iterable[NodeType], *, overwrite: bool = False) -> int:
         """
         JARVIS helper: seed NodeTypes on startup without failing on duplicates.
 
-        Returns the count of newly inserted NodeTypes.
+        Returns the count of applied NodeTypes. If `overwrite` is false, duplicates are skipped.
         """
+        if overwrite:
+            applied = 0
+            for node_type in node_types:
+                self._store.upsert(node_type)
+                applied += 1
+            if applied:
+                logger.info("NodeType seeding applied %s records (overwrite=true)", applied)
+            return applied
+
         inserted = 0
         for node_type in node_types:
             try:

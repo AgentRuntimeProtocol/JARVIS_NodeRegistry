@@ -110,6 +110,30 @@ class NodeTypeStore:
             conn.commit()
         return node_type
 
+    def upsert(self, node_type: NodeType) -> NodeType:
+        payload = node_type.model_dump(exclude_none=True)
+        node_type_json = json.dumps(payload, separators=(",", ":"))
+        with self._connect() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                INSERT INTO node_types (node_type_id, version, kind, node_type_json, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(node_type_id, version) DO UPDATE SET
+                  kind=excluded.kind,
+                  node_type_json=excluded.node_type_json
+                """,
+                (
+                    node_type.node_type_id,
+                    node_type.version,
+                    node_type.kind.value,
+                    node_type_json,
+                    _now_iso(),
+                ),
+            )
+            conn.commit()
+        return node_type
+
     def get(self, node_type_id: str, version: str) -> NodeType | None:
         with self._connect() as conn:
             cur = conn.cursor()
